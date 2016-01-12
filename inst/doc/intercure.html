@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Julio Brettas" />
+
+<meta name="date" content="2016-01-11" />
+
+<title>Cure rate estimation for interval censored data with the intercure package</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css,body%20%7B%0A%20%20background%2Dcolor%3A%20%23fff%3B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20max%2Dwidth%3A%20700px%3B%0A%20%20overflow%3A%20visible%3B%0A%20%20padding%2Dleft%3A%202em%3B%0A%20%20padding%2Dright%3A%202em%3B%0A%20%20font%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0A%20%20font%2Dsize%3A%2014px%3B%0A%20%20line%2Dheight%3A%201%2E35%3B%0A%7D%0A%0A%23header%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0A%0A%23TOC%20%7B%0A%20%20clear%3A%20both%3B%0A%20%20margin%3A%200%200%2010px%2010px%3B%0A%20%20padding%3A%204px%3B%0A%20%20width%3A%20400px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20border%2Dradius%3A%205px%3B%0A%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20font%2Dsize%3A%2013px%3B%0A%20%20line%2Dheight%3A%201%2E3%3B%0A%7D%0A%20%20%23TOC%20%2Etoctitle%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%20%20font%2Dsize%3A%2015px%3B%0A%20%20%20%20margin%2Dleft%3A%205px%3B%0A%20%20%7D%0A%0A%20%20%23TOC%20ul%20%7B%0A%20%20%20%20padding%2Dleft%3A%2040px%3B%0A%20%20%20%20margin%2Dleft%3A%20%2D1%2E5em%3B%0A%20%20%20%20margin%2Dtop%3A%205px%3B%0A%20%20%20%20margin%2Dbottom%3A%205px%3B%0A%20%20%7D%0A%20%20%23TOC%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dleft%3A%20%2D2em%3B%0A%20%20%7D%0A%20%20%23TOC%20li%20%7B%0A%20%20%20%20line%2Dheight%3A%2016px%3B%0A%20%20%7D%0A%0Atable%20%7B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dcolor%3A%20%23DDDDDD%3B%0A%20%20border%2Dstyle%3A%20outset%3B%0A%20%20border%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0A%20%20border%2Dwidth%3A%202px%3B%0A%20%20padding%3A%205px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%20%20line%2Dheight%3A%2018px%3B%0A%20%20padding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Ap%20%7B%0A%20%20margin%3A%200%2E5em%200%3B%0A%7D%0A%0Ablockquote%20%7B%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20padding%3A%200%2E25em%200%2E75em%3B%0A%7D%0A%0Ahr%20%7B%0A%20%20border%2Dstyle%3A%20solid%3B%0A%20%20border%3A%20none%3B%0A%20%20border%2Dtop%3A%201px%20solid%20%23777%3B%0A%20%20margin%3A%2028px%200%3B%0A%7D%0A%0Adl%20%7B%0A%20%20margin%2Dleft%3A%200%3B%0A%7D%0A%20%20dl%20dd%20%7B%0A%20%20%20%20margin%2Dbottom%3A%2013px%3B%0A%20%20%20%20margin%2Dleft%3A%2013px%3B%0A%20%20%7D%0A%20%20dl%20dt%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%7D%0A%0Aul%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%7D%0A%20%20ul%20li%20%7B%0A%20%20%20%20list%2Dstyle%3A%20circle%20outside%3B%0A%20%20%7D%0A%20%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dbottom%3A%200%3B%0A%20%20%7D%0A%0Apre%2C%20code%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20color%3A%20%23333%3B%0A%7D%0Apre%20%7B%0A%20%20white%2Dspace%3A%20pre%2Dwrap%3B%20%20%20%20%2F%2A%20Wrap%20long%20lines%20%2A%2F%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20margin%3A%205px%200px%2010px%200px%3B%0A%20%20padding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Acode%20%7B%0A%20%20font%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0A%20%20font%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0A%20%20padding%3A%202px%200px%3B%0A%7D%0A%0Adiv%2Efigure%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20padding%3A%202px%3B%0A%20%20border%3A%201px%20solid%20%23DDDDDD%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20margin%3A%200%205px%3B%0A%7D%0A%0Ah1%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%20%20font%2Dsize%3A%2035px%3B%0A%20%20line%2Dheight%3A%2040px%3B%0A%7D%0A%0Ah2%20%7B%0A%20%20border%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20padding%2Dbottom%3A%202px%3B%0A%20%20font%2Dsize%3A%20145%25%3B%0A%7D%0A%0Ah3%20%7B%0A%20%20border%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20font%2Dsize%3A%20120%25%3B%0A%7D%0A%0Ah4%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0A%20%20margin%2Dleft%3A%208px%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Ah5%2C%20h6%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23ccc%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Aa%20%7B%0A%20%20color%3A%20%230033dd%3B%0A%20%20text%2Ddecoration%3A%20none%3B%0A%7D%0A%20%20a%3Ahover%20%7B%0A%20%20%20%20color%3A%20%236666ff%3B%20%7D%0A%20%20a%3Avisited%20%7B%0A%20%20%20%20color%3A%20%23800080%3B%20%7D%0A%20%20a%3Avisited%3Ahover%20%7B%0A%20%20%20%20color%3A%20%23BB00BB%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%0A%2F%2A%20Class%20described%20in%20https%3A%2F%2Fbenjeffrey%2Ecom%2Fposts%2Fpandoc%2Dsyntax%2Dhighlighting%2Dcss%0A%20%20%20Colours%20from%20https%3A%2F%2Fgist%2Egithub%2Ecom%2Frobsimmons%2F1172277%20%2A%2F%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Keyword%20%2A%2F%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%2F%2A%20DataType%20%2A%2F%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%2F%2A%20DecVal%20%28decimal%20values%29%20%2A%2F%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20BaseN%20%2A%2F%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Float%20%2A%2F%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Char%20%2A%2F%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20String%20%2A%2F%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%2F%2A%20Comment%20%2A%2F%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%2F%2A%20OtherToken%20%2A%2F%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20AlertToken%20%2A%2F%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Function%20calls%20%2A%2F%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%2F%2A%20ErrorTok%20%2A%2F%0A%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Cure rate estimation for interval censored data with the intercure package</h1>
+<h4 class="author"><em>Julio Brettas</em></h4>
+<h4 class="date"><em>2016-01-11</em></h4>
+</div>
+
+
+<p>The <code>intercure</code> package provides implementations of semiparametric cure rate estimators for interval censored data using the bounded cumulative hazard and the frailty models. For clustered datasets, an extension of the frailty model proposed on <span class="citation">Lam and Wong (2014)</span> is also implemented to incorporate the group effects. This package also provides functions to generate interval censored datasets with a cure fraction using different specifications. The readers should keep in mind that this vignette focuses only on how to use the estimators with this package. Theorical details and a full description of each algorithm can be encountered on the cited articles.</p>
+<div id="bounded-cumulative-hazard-model" class="section level2">
+<h2>Bounded cumulative hazard model</h2>
+<p>Assuming the bounded cumulative hazard model, the populational survival function can be written as:</p>
+<p><span class="math">\[S(t | \boldsymbol{Z}) = P(T \geq t | \boldsymbol{Z}) = \exp(-e^{\alpha + \boldsymbol{\beta}'\boldsymbol(Z)}F^{*}(t))\]</span></p>
+<p>where <span class="math">\(F^{*}(t)\)</span> is a completely unknown regular distribution function, <span class="math">\(\boldsymbol{Z}\)</span> is the covariate vector, <span class="math">\(\alpha\)</span> is the intercept to be estimated and <span class="math">\(\boldsymbol{\beta}\)</span> is the vector of effects associated to <span class="math">\(\boldsymbol{Z}\)</span>. Taking the limit of the expression above gives <span class="math">\(\exp(-e^{\alpha + \boldsymbol{\beta}'\boldsymbol(Z)})\)</span>, the probability of being cured.</p>
+<p>In this specification, <span class="math">\(F^{*}(t)\)</span> is related to the promotion time of each of <span class="math">\(N\)</span> tumorous cells, as well known in literature for this motivation. For interval censored data, the proposed semiparametric model uses the non-parametric Turnbull estimator for this component, restricting the search of the distribution function estimate to an equivalence class.</p>
+<p>In general, the estimation proccess is based on the ECM algorithm, with the authors proposing the use of convex optimization techniques to deal with the high dimensionality problem implied by the vector of probabilities to be estimated. The algorithm, based on a C routine implemented by the original authors, is fully described on <span class="citation">Shen and Hao (2009)</span>. The next sections provides examples generating data with the promotion time specification and fitting the proposed model.</p>
+<div id="sim_bch-function" class="section level3">
+<h3>sim_bch function</h3>
+<p>The <code>sim_bch</code> function output consists on a interval censored dataset containing a cure fraction, specified by the user with the input parameters. The dataset contains two covariates: a binary variable <span class="math">\(X_1 \sim Bernoulli(\mbox{prob})\)</span>, with <code>prob</code> specified as an input; a continuous variable <span class="math">\(X_2 \sim N(0,1)\)</span>. The effects of these covariates are given by the <code>theta</code> parameter, consisting on a vector with the intercept and the effects of each covariate. The <code>lambda</code> parameter is related to the mean event time of each tumorous cell, which follows here an exponential distribution. The censoring mechanism is controlled by the user with the <span class="math">\(A\)</span> and <span class="math">\(B\)</span> parameters, as the random censoring is defined as <span class="math">\(C = \min(A, a*B)\)</span>, with <span class="math">\(a \sim U(0,1)\)</span>.</p>
+<p>A dataset based on the bounded cumulative hazard cure model can be generated as it follows:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sim_bch</span>(<span class="dv">10</span>)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Z</th>
+<th align="center">L</th>
+<th align="center">R</th>
+<th align="center">delta</th>
+<th align="center">xi1</th>
+<th align="center">xi2</th>
+<th align="center">N_L</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">0.1324203</td>
+<td align="center">0</td>
+</tr>
+<tr class="even">
+<td align="center">0.1908936</td>
+<td align="center">0.0000000</td>
+<td align="center">0.2493434</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">0.7079547</td>
+<td align="center">2</td>
+</tr>
+<tr class="odd">
+<td align="center">0.1804262</td>
+<td align="center">0.0000000</td>
+<td align="center">0.3297508</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">-0.2396980</td>
+<td align="center">6</td>
+</tr>
+<tr class="even">
+<td align="center">0.5109248</td>
+<td align="center">0.4301312</td>
+<td align="center">0.8556095</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">1.9844739</td>
+<td align="center">5</td>
+</tr>
+<tr class="odd">
+<td align="center">0.2790907</td>
+<td align="center">0.0000000</td>
+<td align="center">0.4490785</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">-0.1387870</td>
+<td align="center">4</td>
+</tr>
+<tr class="even">
+<td align="center">0.2243873</td>
+<td align="center">0.1442220</td>
+<td align="center">0.6253021</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">0.4176508</td>
+<td align="center">5</td>
+</tr>
+<tr class="odd">
+<td align="center">0.2633952</td>
+<td align="center">0.0000000</td>
+<td align="center">0.3276008</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">0.9817528</td>
+<td align="center">4</td>
+</tr>
+<tr class="even">
+<td align="center">0.8410426</td>
+<td align="center">0.8044177</td>
+<td align="center">1.2587126</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">-0.3926954</td>
+<td align="center">3</td>
+</tr>
+<tr class="odd">
+<td align="center">0.1021822</td>
+<td align="center">0.0000000</td>
+<td align="center">0.1963932</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">-1.0396690</td>
+<td align="center">3</td>
+</tr>
+<tr class="even">
+<td align="center">0.4726227</td>
+<td align="center">0.4028846</td>
+<td align="center">0.7280192</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">1.7822290</td>
+<td align="center">2</td>
+</tr>
+</tbody>
+</table>
+<p>In particular, the <code>N_L</code> column of the output contains, for each observation, the number of latent variables which the minimum represents the time of the event, as the number of tumorous cells on the original motivation.</p>
+</div>
+<div id="inter_bch-function" class="section level3">
+<h3>inter_bch function</h3>
+<p>To fit a cure rate model for a interval censored dataset using the promotion time specification, the user can call the function <code>inter_bch</code> for this purpose. For this, and also for any cure rate estimation proccess, the modeller should have a strong motivation about the possibility of cure in the target dataset.</p>
+<p>The use of the <code>inter_bch</code> function is shown below:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># hypothetical interval censored dataset with a cure fraction</span>
+<span class="kw">set.seed</span>(<span class="dv">2</span>)
+cureset &lt;-<span class="st"> </span><span class="kw">sim_bch</span>(<span class="dv">100</span>)
+
+<span class="co"># allocates the estimated parameters and covariance matrix</span>
+output &lt;-<span class="st"> </span><span class="kw">inter_bch</span>(cureset, 
+                        cureset$L, cureset$R, 
+                        <span class="kw">c</span>(<span class="st">&quot;xi1&quot;</span>, <span class="st">&quot;xi2&quot;</span>))</code></pre>
+<p>The estimated parameters are:</p>
+<pre class="sourceCode r"><code class="sourceCode r">output$par</code></pre>
+<pre><code>## [1] 0.880433883 0.614354190 0.009620084</code></pre>
+<p>Fixing <span class="math">\(X_1 = 1\)</span> and <span class="math">\(X_2 = 0\)</span>, an estimate of the cure rate can be obtained as follows:</p>
+<pre class="sourceCode r"><code class="sourceCode r">indiv &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>)
+est_effect &lt;-<span class="st"> </span>output$par
+cf &lt;-<span class="st"> </span><span class="kw">exp</span>(-<span class="kw">exp</span>(est_effect[<span class="dv">1</span>:<span class="dv">3</span>]%*%indiv))
+cf</code></pre>
+<pre><code>##            [,1]
+## [1,] 0.01158098</code></pre>
+<p>Then, based on the bounded cumulative hazard model, the probability of an individual with <span class="math">\(X_1 = 1\)</span> and <span class="math">\(X_2 = 0\)</span> being cured is give by 0.011581.</p>
+</div>
+</div>
+<div id="frailty-model" class="section level2">
+<h2>Frailty model</h2>
+<p>The algorithm used on the <code>inter_frailty</code> function is essentialy the model proposed on <span class="citation">Lam, Wong, and Zhou (2013)</span>. It consists on a semiparametric estimator assuming individual effects <span class="math">\(u_i\)</span> for each individual <span class="math">\(i\)</span>. The effects for the cure rate and for the time to event (directly associated with the propotional hazards effects) are labelled by the author as incidence (<span class="math">\(\boldsymbol{\theta}\)</span>) and latent (<span class="math">\(\boldsymbol{\beta}\)</span>) effects, respectively, and modelled separately. The covariate vector related to each of these effects are refered by <span class="math">\(\boldsymbol{x^{(0)}} = (1, x^{(0)}_1, \dotsb, x^{(0)}_{p_0})\)</span> and <span class="math">\(\boldsymbol{x^{(1)}} = ( x^{(1)}_1, \dotsb, x^{(1)}_{p_1})\)</span>, respectively. For a individual <span class="math">\(i\)</span> with specific effect <span class="math">\(u_i\)</span> and covariates <span class="math">\(x^{(1)}_i\)</span>, the frailty estimator models the conditional hazard function as:</p>
+<p><span class="math">\[\lambda(t | u_i, \boldsymbol{x^{(1)}_i}) = u_i \lambda_0 (t) e^{(\beta' \boldsymbol{x^{(1)}_i})},\]</span></p>
+<p>where <span class="math">\(\lambda_0 (t)\)</span> refers to the baseline marginal hazard function.</p>
+<p>To incorporate a cure fraction, the random variable <span class="math">\(U_i\)</span> is assumed to follow a compound Poisson distribution, which is constructed as a sum of <span class="math">\(K_i\)</span> independent scaled central Chi-square random variables <span class="math">\(W_{1i}, \dotsb, W_{k_i i}\)</span>, each with 2 degrees of freedom and scale parameter set as 1.</p>
+<p>Conditioning on <span class="math">\(K_i = k_i\)</span>, we have:</p>
+<p><span class="math">\[U_i = \left\{ \begin{array} {ll} 0, &amp; \mbox{if } k_i = 0; \\
+W_{1i} + W_{2i} + \dotsb + W_{k_i i} &amp; \mbox{if } k_i &gt; 0. \\
+\end{array}
+\right.\]</span></p>
+<p>The random variable <span class="math">\(U_i\)</span>, defined this way, can be seen as an extension of the non-central Chi-squared distribution proposed on by <span class="citation">Siegel (1979)</span>. It’s assumed, for estimation, that <span class="math">\(K_i \sim \mbox{Poisson} (e^{\boldsymbol{\theta}'\boldsymbol{x^{(0)}}}/2)\)</span>.</p>
+<p>For estimation, the model uses multiple imputation techniques (asymptotic normal data augmentation) combined with maximum likelihood estimation for the complete dataset. Each iteration of the algorithm is based on <span class="math">\(M\)</span> generated completed datasets using the estimates from the previous iteration. Higher values of <span class="math">\(M\)</span> implies on higher precision with the cost of a more intensive computational proccess.</p>
+<p>The times to the events are obtained with the conditional distribution of <span class="math">\(T\)</span> given the interval censoring and all the augmented data, using the Nelson-Aalen estimator to obtain the cumulative hazard. The algorithm steps and a full description of the model are given on <span class="citation">Lam, Wong, and Zhou (2013)</span>.</p>
+<p>Based on the original paper, taking the limit of <span class="math">\(t \rightarrow \infty\)</span> for the individual <span class="math">\(i\)</span> survival function, we have:</p>
+<p><span class="math">\[ P(\mbox{cured} | \boldsymbol{x_i}) = P(K_i = 0 | \boldsymbol{x_i}) = \exp( -{e^{\boldsymbol{\theta}'\boldsymbol{x^{(0)}}} / 2}). \]</span></p>
+<p>An example of how to obtain an estimate for the cure fraction is shown in the next sessions.</p>
+<div id="sim_frailty-function" class="section level3">
+<h3>sim_frailty function</h3>
+<p>The <code>sim_frailty</code> function generates a interval censored dataset containing a proportion of cured individuals.</p>
+<p>A binary variable <span class="math">\(X_1\)</span> with probability <code>prob</code> of event set by the user defines the distribution of the two different treatments, generated on the dataset. A continuous variable <span class="math">\(X_2 \sim N(0, 1)\)</span> is also generated. The effects <span class="math">\(\boldsymbol{\theta}\)</span> and <span class="math">\(\boldsymbol{\beta}\)</span> associated with the incidence and time to event for both the dummy and normal covariate are set by the user and defined by default as (-1, 1, 0) and (0, 0.5), respectively.</p>
+<p>The user can also set the interval censoring using a mixed variable <span class="math">\(C = \min(A, a \times B)\)</span>, in which <span class="math">\(A\)</span> defines a constant (interpreted as the limit of observation time) and <span class="math">\(B\)</span> is a constant multiplying the uniform random variable <code>a</code>.</p>
+<p>It’s use is expressed as below:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sim_frailty</span>(<span class="dv">10</span>)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Z</th>
+<th align="center">L</th>
+<th align="center">R</th>
+<th align="center">delta</th>
+<th align="center">xi1</th>
+<th align="center">xi2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">-0.3076564</td>
+</tr>
+<tr class="even">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">-0.9530173</td>
+</tr>
+<tr class="odd">
+<td align="center">0.7083161</td>
+<td align="center">0.4865131</td>
+<td align="center">0.7926158</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">-0.6482428</td>
+</tr>
+<tr class="even">
+<td align="center">0.2976204</td>
+<td align="center">0.0000000</td>
+<td align="center">0.3197923</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">1.2243136</td>
+</tr>
+<tr class="odd">
+<td align="center">0.8492072</td>
+<td align="center">0.7458599</td>
+<td align="center">1.1463052</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">0.1998116</td>
+</tr>
+<tr class="even">
+<td align="center">0.9375155</td>
+<td align="center">0.7754278</td>
+<td align="center">1.0266696</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">-0.5784837</td>
+</tr>
+<tr class="odd">
+<td align="center">1.6717373</td>
+<td align="center">1.6717373</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">-0.9423007</td>
+</tr>
+<tr class="even">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">-0.2037282</td>
+</tr>
+<tr class="odd">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">-1.6664748</td>
+</tr>
+<tr class="even">
+<td align="center">4.1959883</td>
+<td align="center">4.1959883</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">-0.4844551</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="inter_frailty-function" class="section level3">
+<h3>inter_frailty function</h3>
+<p>From a interval censored dataset possibly containing a cure fraction (it’s important to have a reason/motivation to believe that the data contains cured individuals), the user can estimate the cure fraction using the frailty model as shown below:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># hypothetical interval censored dataset with a cure fraction</span>
+<span class="kw">set.seed</span>(<span class="dv">2</span>)
+cureset &lt;-<span class="st"> </span><span class="kw">sim_frailty</span>(<span class="dv">100</span>)
+
+<span class="co"># allocates the estimated parameters and covariance matrix</span>
+output &lt;-<span class="st"> </span><span class="kw">inter_frailty</span>(cureset, 
+                        cureset$L, cureset$R, cureset$delta, 
+                        <span class="kw">c</span>(<span class="st">&quot;xi1&quot;</span>, <span class="st">&quot;xi2&quot;</span>), <span class="kw">c</span>(<span class="st">&quot;xi1&quot;</span>, <span class="st">&quot;xi2&quot;</span>),
+                        <span class="dt">M =</span> <span class="dv">10</span>, <span class="dt">max_n =</span> <span class="dv">30</span>, <span class="dt">burn_in =</span> <span class="dv">10</span>)</code></pre>
+<p>The estimated parameters are:</p>
+<pre class="sourceCode r"><code class="sourceCode r">output$par</code></pre>
+<pre><code>##   intercept         xi1         xi2         xi1         xi2 
+## -1.26715040  1.30046846  0.16722633  0.29201495  0.05607656</code></pre>
+<p>As the first set corresponds to the incidence effects, fixing on <span class="math">\(X_1 = 1\)</span> and <span class="math">\(X_2 = 0\)</span> provides:</p>
+<pre class="sourceCode r"><code class="sourceCode r">indiv &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>)
+est_effect &lt;-<span class="st"> </span>output$par
+cf &lt;-<span class="st"> </span><span class="kw">exp</span>(-<span class="kw">exp</span>(est_effect[<span class="dv">1</span>:<span class="dv">3</span>]%*%indiv)/<span class="dv">2</span>)
+cf</code></pre>
+<pre><code>##           [,1]
+## [1,] 0.5963428</code></pre>
+<p>In other words, based on the frailty model, an individual with <span class="math">\(X_1 = 1\)</span> and <span class="math">\(X_2 = 0\)</span> have 0.5963428 of probability of being cured.</p>
+<p>Using an registered parallel backend, this algorithm can be set to run in parallel using the <code>par_cl</code> parameter, improving the speed of the estimation. The user can use the package <code>parallel</code>, for example, to register the cluster of cores. The same estimation proccess shown before can then be executed as it follows:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(parallel)
+<span class="kw">require</span>(doParallel)
+cl &lt;-<span class="st"> </span><span class="kw">makeCluster</span>(<span class="dv">4</span>)
+<span class="kw">registerDoParallel</span>(cl)
+output &lt;-<span class="st"> </span><span class="kw">inter_frailty</span>(cureset, 
+                        cureset$L, cureset$R, cureset$delta, 
+                        <span class="kw">c</span>(<span class="st">&quot;xi1&quot;</span>, <span class="st">&quot;xi2&quot;</span>), <span class="kw">c</span>(<span class="st">&quot;xi1&quot;</span>, <span class="st">&quot;xi2&quot;</span>),
+                        <span class="dt">M =</span> <span class="dv">10</span>, <span class="dt">par_cl =</span> cl)
+  
+
+
+<span class="kw">stopCluster</span>(cl)</code></pre>
+</div>
+</div>
+<div id="frailty-model-to-clustered-data" class="section level2">
+<h2>Frailty model to clustered data</h2>
+<p>The frailty model have an natural extension for clustered data, presented on <span class="citation">Lam and Wong (2014)</span>. The theorical details of this extension, despite its simplicity, are not shown here and can be seen on the original paper, as recommended. The function <code>inter_frailty_cl</code> presents the same syntax as the non-clustered data version with exception of a new parameter, <code>grp</code>, which should contain a vector of groups ids. A different function was implemented having in mind the differences on the estimation proccess. It can be shown that, for a fixed cluster effect <span class="math">\(\Xi_i = \xi_i\)</span>, the cure fraction is obtained as it follows:</p>
+<p><span class="math">\[ P(\mbox{cured} | \Xi_i = \xi_i, \boldsymbol{x_i}) = P(K_i = 0 | \Xi_i = \xi_i, \boldsymbol{x_i}) = \exp( -{\xi_i \times e^{\boldsymbol{\theta}'\boldsymbol{x^{(0)}}} / 2}). \]</span></p>
+<div id="sim_frailty_cl" class="section level3">
+<h3>sim_frailty_cl</h3>
+<p>This function generates a clustered interval censored dataset containing a cure fraction based on the frailty model described on <span class="citation">Lam and Wong (2014)</span>.</p>
+<p>To generate a dataset of 15 rows with 3 different groups, the user can use the <code>sim_frailty_cl</code> function, as it follows:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sim_frailty_cl</span>(<span class="dv">15</span>, <span class="dt">nclus =</span> <span class="dv">3</span>)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Z</th>
+<th align="center">L</th>
+<th align="center">R</th>
+<th align="center">delta</th>
+<th align="center">xi1</th>
+<th align="center">xi2</th>
+<th align="center">clus</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">0.8234145</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">-0.3877827</td>
+<td align="center">2</td>
+</tr>
+<tr class="odd">
+<td align="center">0.9249418</td>
+<td align="center">0.6695500</td>
+<td align="center">1.0368154</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">0.8793612</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">-2.1782447</td>
+<td align="center">3</td>
+</tr>
+<tr class="odd">
+<td align="center">1.0148047</td>
+<td align="center">0.9055278</td>
+<td align="center">1.1498328</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">1.4737105</td>
+<td align="center">3</td>
+</tr>
+<tr class="even">
+<td align="center">0.9436409</td>
+<td align="center">0.7191391</td>
+<td align="center">1.1310913</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">0.8847702</td>
+<td align="center">3</td>
+</tr>
+<tr class="odd">
+<td align="center">0.1363463</td>
+<td align="center">0.0000000</td>
+<td align="center">0.2136636</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">2.2870023</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">0.5539274</td>
+<td align="center">2</td>
+</tr>
+<tr class="odd">
+<td align="center">0.5057500</td>
+<td align="center">0.4414883</td>
+<td align="center">0.6103853</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">1.2106445</td>
+<td align="center">3</td>
+</tr>
+<tr class="even">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">-0.6424207</td>
+<td align="center">2</td>
+</tr>
+<tr class="odd">
+<td align="center">1.6089875</td>
+<td align="center">1.3807734</td>
+<td align="center">1.7841266</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">-0.1573411</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="center">2.2387029</td>
+<td align="center">2.2387029</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">-0.0966527</td>
+<td align="center">1</td>
+</tr>
+<tr class="odd">
+<td align="center">5.0000000</td>
+<td align="center">5.0000000</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">-1.5067646</td>
+<td align="center">2</td>
+</tr>
+<tr class="even">
+<td align="center">0.5793702</td>
+<td align="center">0.5791770</td>
+<td align="center">0.7131729</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">-0.4947704</td>
+<td align="center">1</td>
+</tr>
+<tr class="odd">
+<td align="center">1.9855800</td>
+<td align="center">1.9855800</td>
+<td align="center">Inf</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">-0.8976974</td>
+<td align="center">3</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>clus</code> column of the dataset generated by <code>sim_frailty_cl</code> contains the identifications of each generated cluster.</p>
+</div>
+<div id="inter_frailty_cl-function" class="section level3">
+<h3>inter_frailty_cl function</h3>
+<p>The <code>inter_frailty_cl</code> function uses the algorithm proposed on <span class="citation">Lam and Wong (2014)</span> to fit a cure rate model on clustered interval censored data. The input parameters are the same as the <code>inter_frailty</code> function, with exception of <code>grp</code>, a vector identifying the cluster of each observation.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># hypothetical interval censored dataset with a cure fraction</span>
+<span class="kw">set.seed</span>(<span class="dv">2</span>)
+cureset &lt;-<span class="st"> </span><span class="kw">sim_frailty_cl</span>(<span class="dv">120</span>, <span class="dt">nclus =</span> <span class="dv">3</span>)
+
+<span class="co"># allocates the estimated parameters and covariance matrix</span>
+output &lt;-<span class="st"> </span><span class="kw">inter_frailty_cl</span>(cureset, 
+                        cureset$L, cureset$R, cureset$delta, 
+                        <span class="kw">c</span>(<span class="st">&quot;xi1&quot;</span>, <span class="st">&quot;xi2&quot;</span>), <span class="kw">c</span>(<span class="st">&quot;xi1&quot;</span>, <span class="st">&quot;xi2&quot;</span>),
+                        <span class="dt">grp =</span> cureset$clus, <span class="dt">M =</span> <span class="dv">30</span>, <span class="dt">max_n =</span> <span class="dv">30</span>,
+                        <span class="dt">burn_in =</span> <span class="dv">10</span>)</code></pre>
+<p>The estimated parameters are:</p>
+<pre class="sourceCode r"><code class="sourceCode r">output$par</code></pre>
+<pre><code>##  intercept        xi1        xi2        xi1        xi2      log_w 
+##  0.3296825  0.6636964  0.1059934 -0.1125780  0.5885190 -0.5664734</code></pre>
+<p>The output vector on <code>$par</code> have, as the non-clustered version, the effects associated with the incidence and latency of the model. One additional parameter is estimated and shown: <span class="math">\(\log(w)\)</span>, where the group effect is obtained from <span class="math">\(Gamma(w, w)\)</span>, as can be seen on the original paper. As the mean of the group effect is 1, the cure rate for this scenario, fixing the cluster effects as its mean, is obtained the same way as for the <code>inter_frailty</code> function previosly shown.</p>
+<div class="references">
+<h2>References</h2>
+<p>Lam, Kwok Fai, and Kin Yau Wong. 2014. “Semiparametric Analysis of Clustered Interval-Censored Survival Data with a Cure Fraction.” <em>Computational Statistics and Data Analysis</em> 79: 165–74.</p>
+<p>Lam, Kwok Fai, Kin Yau Wong, and Feifei Zhou. 2013. “A Semiparametric Cure Model for Interval-Censored Data.” <em>Biometrical Journal</em> 55 (5): 771–88.</p>
+<p>Shen, Yu, and Liu Hao. 2009. “A Semiparametric Regression Cure Model for Interval-Censored Data.” <em>Journal of the American Statistical Association</em> 104 (487): 1168–78.</p>
+<p>Siegel, Andrew F. 1979. “The Noncentral Chi-Squared Distribution with Zero Degrees of Freedom and Testing for Uniformity.” <em>Biometrika</em> 66: 381–86.</p>
+</div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
